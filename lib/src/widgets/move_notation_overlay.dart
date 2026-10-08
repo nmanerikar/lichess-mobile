@@ -25,7 +25,7 @@ MoveNotation? moveNotationOf(SanMove? sanMove, int ply) {
 /// Total duration of the notation label animation.
 const kMoveNotationDuration = Duration(milliseconds: 1500);
 
-/// Shows the notation of the last move above its target square, then fades it out.
+/// Shows the notation of the last move centered on its target square, then fades it out.
 ///
 /// Meant to be stacked on top of a board of the same [boardSize]. It does not intercept pointer
 /// events.
@@ -54,12 +54,6 @@ class _MoveNotationOverlayState()
     TweenSequenceItem(tween: ConstantTween(1.0), weight: 47),
     TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 45),
   ]).animate(_controller);
-
-  /// Fraction of a square the label drifts up while it is visible.
-  late final Animation<double> _drift = Tween(
-    begin: 0.0,
-    end: 0.3,
-  ).chain(CurveTween(curve: Curves.easeOut)).animate(_controller);
 
   MoveNotation? _current;
 
@@ -113,32 +107,31 @@ class _MoveNotationOverlayState()
         dimension: widget.boardSize,
         child: AnimatedBuilder(
           animation: _controller,
-          builder: (context, child) => CustomSingleChildLayout(
+          builder: (context, child) => Opacity(opacity: _opacity.value, child: child),
+          child: CustomSingleChildLayout(
             delegate: _NotationLayoutDelegate(
-              // Center the label horizontally on the square, and vertically on its top edge.
-              anchor: Offset((column + 0.5) * squareSize, (row - _drift.value) * squareSize),
+              anchor: Offset((column + 0.5) * squareSize, (row + 0.5) * squareSize),
             ),
-            child: Opacity(opacity: _opacity.value, child: child),
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.all(Radius.circular(squareSize * 0.2)),
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: squareSize * 0.15,
-                vertical: squareSize * 0.04,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.all(Radius.circular(squareSize * 0.2)),
               ),
-              child: Text(
-                notation.san,
-                maxLines: 1,
-                softWrap: false,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: squareSize * 0.4,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: squareSize * 0.15,
+                  vertical: squareSize * 0.04,
+                ),
+                child: Text(
+                  notation.san,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: squareSize * 0.4,
+                    fontWeight: FontWeight.bold,
+                    height: 1.2,
+                  ),
                 ),
               ),
             ),
@@ -149,7 +142,8 @@ class _MoveNotationOverlayState()
   }
 }
 
-/// Centers the label on [anchor], keeping it within the board.
+/// Centers the label on [anchor], keeping it within the board (e.g. long notations on the edge
+/// files).
 class const _NotationLayoutDelegate({required final Offset anchor})
     extends SingleChildLayoutDelegate {
   @override

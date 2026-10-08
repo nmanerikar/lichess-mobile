@@ -56,7 +56,7 @@ void main() {
       return notifier;
     }
 
-    testWidgets('shows the label above the target square', (WidgetTester tester) async {
+    testWidgets('centers the label on the target square', (WidgetTester tester) async {
       final notifier = await pumpOverlay(tester, Side.white);
       expect(find.text('e4'), findsNothing);
 
@@ -67,8 +67,11 @@ void main() {
       final label = tester.getRect(find.text('e4'));
       // e-file is the 5th column, 4th rank is the 5th row from the top.
       expect(label.center.dx, closeTo(4.5 * squareSize, 0.5));
-      expect(label.center.dy, lessThan(4.5 * squareSize));
-      expect(label.center.dy, greaterThan(3.0 * squareSize));
+      expect(label.center.dy, closeTo(4.5 * squareSize, 0.5));
+
+      // The label stays put while it fades out.
+      await tester.pump(kMoveNotationDuration * 0.7);
+      expect(tester.getRect(find.text('e4')).center, label.center);
     });
 
     testWidgets('flips the label position with the board orientation', (WidgetTester tester) async {
@@ -79,6 +82,7 @@ void main() {
 
       final label = tester.getRect(find.text('e4'));
       expect(label.center.dx, closeTo(3.5 * squareSize, 0.5));
+      expect(label.center.dy, closeTo(3.5 * squareSize, 0.5));
     });
 
     testWidgets('keeps the label within the board', (WidgetTester tester) async {
