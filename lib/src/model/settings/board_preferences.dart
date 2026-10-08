@@ -86,6 +86,10 @@ class BoardPreferences() extends Notifier<BoardPrefs> with PreferencesStorage<Bo
     return save(state.copyWith(coordinates: !state.coordinates));
   }
 
+  Future<void> toggleShowMoveNotation() {
+    return save(state.copyWith(showMoveNotation: !state.showMoveNotation));
+  }
+
   Future<void> toggleBorder() {
     return save(state.copyWith(showBorder: !state.showBorder));
   }
@@ -177,6 +181,9 @@ sealed class const BoardPrefs._() with _$BoardPrefs implements Serializable {
     @JsonKey(defaultValue: ShapeColor.green, unknownEnumValue: ShapeColor.green)
     required ShapeColor shapeColor,
     @JsonKey(defaultValue: false) required bool showBorder,
+
+    /// Whether to briefly show the notation of each move above its target square while playing.
+    @JsonKey(defaultValue: false) required bool showMoveNotation,
     @JsonKey(defaultValue: kBoardDefaultBrightnessFilter) required double brightness,
     @JsonKey(defaultValue: kBoardDefaultHueFilter) required double hue,
   }) = _BoardPrefs;
@@ -204,6 +211,7 @@ sealed class const BoardPrefs._() with _$BoardPrefs implements Serializable {
     dragTargetKind: DragTargetKind.circle,
     shapeColor: ShapeColor.green,
     showBorder: false,
+    showMoveNotation: false,
     brightness: kBoardDefaultBrightnessFilter,
     hue: kBoardDefaultHueFilter,
   );

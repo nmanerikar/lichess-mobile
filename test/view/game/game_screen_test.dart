@@ -40,6 +40,7 @@ import 'package:lichess_mobile/src/view/game/game_screen_providers.dart';
 import 'package:lichess_mobile/src/widgets/bottom_bar.dart';
 import 'package:lichess_mobile/src/widgets/clock.dart';
 import 'package:lichess_mobile/src/widgets/game_layout.dart';
+import 'package:lichess_mobile/src/widgets/move_notation_overlay.dart';
 import 'package:lichess_mobile/src/widgets/pockets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
@@ -2623,6 +2624,67 @@ void main() {
       expectLater(socketFactory.outgoingMessages(testGameSocketUri), emits('{"t":"resign-force"}'));
       await tester.tap(find.text('Claim victory'));
       await tester.pump();
+    });
+  });
+
+  group('Move notation', () {
+    Finder notationLabel(String san) =>
+        find.descendant(of: find.byType(MoveNotationOverlay), matching: find.text(san));
+
+    double notationOpacity(WidgetTester tester) => tester
+        .widget<Opacity>(
+          find.descendant(of: find.byType(MoveNotationOverlay), matching: find.byType(Opacity)),
+        )
+        .opacity;
+
+    testWidgets('is not shown when the preference is off', (WidgetTester tester) async {
+      await createTestGame(tester, pgn: 'e4 e5');
+
+      await playMove(tester, 'g1', 'f3');
+      await tester.pump();
+
+      expect(find.byType(MoveNotationOverlay), findsNothing);
+    });
+
+    testWidgets('shows the notation of both players moves, then fades out', (
+      WidgetTester tester,
+    ) async {
+      final gameSocketUri = GameController.socketUri(const GameFullId('qVChCOTcHSeW'));
+      await createTestGame(
+        tester,
+        pgn: 'e4',
+        defaultPreferences: {
+          PrefCategory.board.storageKey: jsonEncode(
+            BoardPrefs.defaults.copyWith(showMoveNotation: true).toJson(),
+          ),
+        },
+      );
+
+      // Nothing is shown for the moves already played when the game loads.
+      expect(find.byType(MoveNotationOverlay), findsOneWidget);
+      expect(notationLabel('e4'), findsNothing);
+
+      // opponent move
+      sendServerSocketMessages(gameSocketUri, [
+        '{"t": "move", "v": 1, "d": {"ply": 2, "uci": "e7e5", "san": "e5", "clock": {"white": 180, "black": 178}}}',
+      ]);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(notationLabel('e5'), findsOneWidget);
+      expect(notationOpacity(tester), 1.0);
+
+      await tester.pump(kMoveNotationDuration);
+      expect(notationOpacity(tester), 0.0);
+
+      // own move
+      await playMove(tester, 'g1', 'f3');
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(notationLabel('Nf3'), findsOneWidget);
+      expect(notationLabel('e5'), findsNothing);
+      expect(notationOpacity(tester), 1.0);
+
+      await tester.pump(kMoveNotationDuration);
+      expect(notationOpacity(tester), 0.0);
     });
   });
 

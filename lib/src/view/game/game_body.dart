@@ -39,6 +39,7 @@ import 'package:lichess_mobile/src/widgets/buttons.dart';
 import 'package:lichess_mobile/src/widgets/clock.dart';
 import 'package:lichess_mobile/src/widgets/game_layout.dart';
 import 'package:lichess_mobile/src/widgets/move_list.dart';
+import 'package:lichess_mobile/src/widgets/move_notation_overlay.dart';
 import 'package:lichess_mobile/src/widgets/platform_alert_dialog.dart';
 import 'package:lichess_mobile/src/widgets/yes_no_dialog.dart';
 import 'package:material_ui/material_ui.dart';
@@ -261,6 +262,10 @@ class _PlayableGameBoardState() extends ConsumerState<_PlayableGameBoard> {
 
   late final _ctrlProvider = gameControllerProvider(widget.gameId);
 
+  /// Notation of the last move played, shown briefly on the board when the
+  /// [BoardPrefs.showMoveNotation] preference is on.
+  final _moveNotation = ValueNotifier<MoveNotation?>(null);
+
   @override
   void initState() {
     super.initState();
@@ -283,6 +288,7 @@ class _PlayableGameBoardState() extends ConsumerState<_PlayableGameBoard> {
   @override
   void dispose() {
     _controller.dispose();
+    _moveNotation.dispose();
     super.dispose();
   }
 
@@ -320,6 +326,7 @@ class _PlayableGameBoardState() extends ConsumerState<_PlayableGameBoard> {
     if (state.isReplaying) {
       // History navigation — animate and clear premove on position change.
       _controller.updatePosition(gameData, resetPremove: fenChanged);
+      _moveNotation.value = null;
       return;
     }
 
@@ -332,6 +339,7 @@ class _PlayableGameBoardState() extends ConsumerState<_PlayableGameBoard> {
     if (isRevert) {
       // Position was rolled back: clear any queued premove instead of playing it.
       _controller.updatePosition(gameData, resetPremove: true);
+      _moveNotation.value = null;
       return;
     }
 
@@ -345,6 +353,9 @@ class _PlayableGameBoardState() extends ConsumerState<_PlayableGameBoard> {
           )
         : null;
     if (explosion != null) _controller.triggerExplosion(explosion);
+    if (boardPrefs.showMoveNotation) {
+      _moveNotation.value = moveNotationOf(state.game.stepAt(state.stepCursor).sanMove, newPly);
+    }
 
     // Only play a queued premove when the opponent just moved, i.e. it is now
     // our turn. This mirrors lila's `playedColor !== d.player.color` gate: a
@@ -419,6 +430,7 @@ class _PlayableGameBoardState() extends ConsumerState<_PlayableGameBoard> {
         shouldEnableOnFocusGained: () => shell.playable,
         child: GameLayout(
           boardKey: widget.boardKey,
+          moveNotation: boardPrefs.showMoveNotation ? _moveNotation : null,
           controllerParams: ControllerBoardParams(
             controller: _controller,
             variant: shell.variant,

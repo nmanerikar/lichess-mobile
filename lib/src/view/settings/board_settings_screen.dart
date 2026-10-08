@@ -216,6 +216,17 @@ class _BoardSettingsScreenState() extends ConsumerState<BoardSettingsScreen> {
                   ref.read(boardPreferencesProvider.notifier).toggleBoardHighlights();
                 },
               ),
+              SwitchSettingTile(
+                title: const Text('Show move notation on board'),
+                subtitle: const Text(
+                  'Briefly display each move (e.g. e4, Nf3) above its square while playing.',
+                  maxLines: 5,
+                ),
+                value: boardPrefs.showMoveNotation,
+                onChanged: (value) {
+                  ref.read(boardPreferencesProvider.notifier).toggleShowMoveNotation();
+                },
+              ),
               if (!isShortVerticalScreen(context))
                 SwitchSettingTile(
                   title: Text(context.l10n.preferencesMoveListWhilePlaying),

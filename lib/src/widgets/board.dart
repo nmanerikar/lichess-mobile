@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:chessground/chessground.dart';
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter/foundation.dart';
 import 'package:lichess_mobile/src/model/common/chess.dart';
 import 'package:lichess_mobile/src/model/settings/board_preferences.dart';
+import 'package:lichess_mobile/src/widgets/move_notation_overlay.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// A widget that displays an interactive chessboard driven by a [ChessboardController].
@@ -28,6 +30,9 @@ class const BoardWidget({
   /// Move annotations to display on the board.
   final Map<Square, Annotation> annotations = const {},
   final Widget? boardOverlay,
+
+  /// When provided, the notation of each new move is briefly shown above its target square.
+  final ValueListenable<MoveNotation?>? moveNotation,
   final String? error,
   final GlobalKey? boardKey,
 }) extends StatelessWidget {
@@ -46,20 +51,29 @@ class const BoardWidget({
 
     final overlay = boardOverlay ?? (error != null ? _ErrorWidget(errorMessage: error!) : null);
 
-    if (overlay != null) {
+    if (overlay != null || moveNotation != null) {
       return Stack(
         clipBehavior: Clip.none,
         children: [
           board,
-          Positioned(
-            left: 16.0,
-            right: 16.0,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: OverflowBox(maxHeight: double.infinity, child: overlay),
+          if (moveNotation != null)
+            Positioned.fill(
+              child: MoveNotationOverlay(
+                notation: moveNotation!,
+                boardSize: size,
+                orientation: orientation,
+              ),
             ),
-          ),
+          if (overlay != null)
+            Positioned(
+              left: 16.0,
+              right: 16.0,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: OverflowBox(maxHeight: double.infinity, child: overlay),
+              ),
+            ),
         ],
       );
     }

@@ -2,6 +2,7 @@ import 'package:chessground/chessground.dart';
 import 'package:collection/collection.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lichess_mobile/src/constants.dart';
 import 'package:lichess_mobile/src/model/common/chess.dart';
@@ -11,6 +12,7 @@ import 'package:lichess_mobile/src/styles/styles.dart';
 import 'package:lichess_mobile/src/utils/screen.dart';
 import 'package:lichess_mobile/src/widgets/board.dart';
 import 'package:lichess_mobile/src/widgets/move_list.dart';
+import 'package:lichess_mobile/src/widgets/move_notation_overlay.dart';
 import 'package:lichess_mobile/src/widgets/pockets.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -64,6 +66,7 @@ class GameLayout extends ConsumerStatefulWidget {
     this.onSelectMove,
     this.moveListBuilder,
     this.boardOverlay,
+    this.moveNotation,
     this.errorMessage,
     this.boardKey,
     this.zenMode = false,
@@ -94,6 +97,7 @@ class GameLayout extends ConsumerStatefulWidget {
       onSelectMove = null,
       moveListBuilder = null,
       boardOverlay = null,
+      moveNotation = null,
       boardKey = null,
       zenMode = false,
       userActionsBar = null,
@@ -166,6 +170,9 @@ class GameLayout extends ConsumerStatefulWidget {
 
   /// Optional widget that will be displayed on top of the board.
   final Widget? boardOverlay;
+
+  /// When provided, the notation of each new move is briefly shown above its target square.
+  final ValueListenable<MoveNotation?>? moveNotation;
 
   /// If true, the move list will be hidden
   final bool zenMode;
@@ -462,6 +469,7 @@ class _GameLayoutState() extends ConsumerState<GameLayout> {
                   settings: settings,
                   boardKey: widget.boardKey,
                   boardOverlay: widget.boardOverlay,
+                  moveNotation: widget.moveNotation,
                   error: widget.errorMessage,
                 ),
                 const SizedBox(width: 16.0),
@@ -553,6 +561,7 @@ class _GameLayoutState() extends ConsumerState<GameLayout> {
                   settings: settings,
                   boardKey: widget.boardKey,
                   boardOverlay: widget.boardOverlay,
+                  moveNotation: widget.moveNotation,
                   error: widget.errorMessage,
                 ),
               ),
